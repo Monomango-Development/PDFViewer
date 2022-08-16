@@ -32,10 +32,26 @@ export default {
         clamp( num, min, max) {
             return Math.min(Math.max(num, min), max)
         },
+        update_remote( parameter, value) {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            fetch("/update", {
+                method: "POST",
+                body: JSON.stringify({
+                    "operator" :  urlParams.get('id'),
+                    "parameter" : parameter,
+                    "value" : value
+                })
+            })
+        },
         load_pdf( event) {
             this.pdf = undefined;
             this.pdf = pdf.createLoadingTask(event.detail.path, {onProgress : (data) => console.log(data)});
-            this.pdf.then( pdf => { this.numpages = pdf.numPages;} );
+            this.pdf.then( pdf => { 
+                this.numpages = pdf.numPages;
+                this.update_remote( "Pages", this.numpages);
+                this.update_remote( "Currentpage", 1);
+                } );
         },
         load_change( data ) {
             console.log("Load change", data);
@@ -50,6 +66,7 @@ export default {
         },
         scroll() {
             document.getElementById(String(this.page_index)).scrollIntoView({behavior: "smooth"});
+            this.update_remote( "Currentpage", this.page_index);
         }
     },
     data: () => ( {
